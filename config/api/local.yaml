@@ -1,0 +1,5 @@
+app_config:
+  postgresql:
+    database: vwap_local
+  ethereum:
+    use_mock: false

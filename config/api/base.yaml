@@ -1,0 +1,36 @@
+name: vwap-api
+pprof: false
+log:
+  level: INFO
+app_config:
+  http:
+    addr: 127.0.0.1:8080
+    read_timeout: 5s
+    write_timeout: 10s
+    cors:
+      enable: true
+      allowed_origins: ["*"]
+      allowed_methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"]
+      allowed_headers: ["*"]
+      exposed_headers: []
+      max_age: 600
+      allow_credentials: false
+  postgresql:
+    database: vwap
+    host: 127.0.0.1
+    port: "5432"
+    user: postgres
+    password: postgres
+  redis:
+    host: 127.0.0.1
+    port: "6379"
+    password: ""
+    db: 0
+  ethereum:
+    rpc_url: "https://pelith-devv.ngrok.pizza"
+    stateview_contract_addr: "0x7ffe42c4a5deea5b0fec41c94c136cf115597227"
+    # For orderbook EIP-712 and optional indexer (same contract as fill/cancel/settle/refund)
+    chain_id: 1
+    vwap_rfq_contract_addr: ""
+    use_mock: false
+#https://eth-mainnet.g.alchemy.com/v2/KzHc8dyos4R4H6jMMqXQ8LnEfnYFTen3

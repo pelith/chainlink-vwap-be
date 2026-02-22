@@ -1,0 +1,44 @@
+# EXAMPLE USAGE:
+#
+#   Refer for explanation to following link:
+#   https://lefthook.dev/configuration/
+#
+# pre-push:
+#   jobs:
+#     - name: packages audit
+#       tags:
+#         - frontend
+#         - security
+#       run: yarn audit
+#
+#     - name: gems audit
+#       tags:
+#         - backend
+#         - security
+#       run: bundle audit
+#
+pre-commit:
+  parallel: true
+  commands:
+    gci-format:
+      glob: "*.go"
+      run: make gci-format
+      stage_fixed: true
+
+    lint:
+      glob: "*.go"
+      run: make lint
+
+    test:
+      glob: "*.go"
+      run: make test
+
+    vulncheck:
+      glob: "{go.mod,go.sum,*.go}"
+      run: go run golang.org/x/vuln/cmd/govulncheck ./...
+
+# commit-msg hook requires `cog` (go install github.com/ohkinozoru/cog@latest). Disabled until cog is installed.
+# commit-msg:
+#   commands:
+#     commit-check:
+#       run: cog verify --file {1}

@@ -1,0 +1,24 @@
+---
+description: Auto-apply the vwap Go skill and workflows
+alwaysApply: true
+---
+
+# vwap Go skill auto-apply
+
+When working in this repository (especially with Go code, `go.mod`, `Makefile`, migrations, sqlc, or linting):
+
+- Always follow the project Go skill at `.cursor/skills/go/SKILL.md`.
+- Use the module/import path `vwap/...` (never `agency/...`).
+- Prefer the documented project workflows (e.g. `make gci-format`, `make lint`, `make test`, `make sqlc`) when relevant.
+---
+description: Auto-apply the vwap Go skill and workflows
+alwaysApply: true
+---
+
+# vwap Go skill auto-apply
+
+When working in this repository (especially with Go code, `go.mod`, `Makefile`, migrations, sqlc, or linting):
+
+- Always follow the project Go skill at `.cursor/skills/go/SKILL.md`.
+- Use the module/import path `vwap/...` (never `vwap/...`).
+- Prefer the documented project workflows (e.g. `make gci-format`, `make lint`, `make test`, `make sqlc`) when relevant.

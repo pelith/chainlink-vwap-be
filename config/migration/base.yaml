@@ -1,0 +1,11 @@
+name: vwap-migration
+pprof: false
+log:
+  level: INFO
+app_config:
+  postgresql:
+    database: vwap
+    host: 127.0.0.1
+    port: "5432"
+    user: postgres
+    password: postgres

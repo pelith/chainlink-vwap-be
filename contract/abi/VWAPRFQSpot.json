@@ -1,0 +1,81 @@
+[
+  {
+    "type": "function",
+    "name": "used",
+    "inputs": [
+      { "name": "maker", "type": "address", "internalType": "address" },
+      { "name": "orderHash", "type": "bytes32", "internalType": "bytes32" }
+    ],
+    "outputs": [{ "name": "", "type": "bool", "internalType": "bool" }],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "getTrade",
+    "inputs": [{ "name": "tradeId", "type": "bytes32", "internalType": "bytes32" }],
+    "outputs": [
+      {
+        "name": "",
+        "type": "tuple",
+        "internalType": "struct VWAPRFQSpot.Trade",
+        "components": [
+          { "name": "maker", "type": "address", "internalType": "address" },
+          { "name": "taker", "type": "address", "internalType": "address" },
+          { "name": "makerIsSellETH", "type": "bool", "internalType": "bool" },
+          { "name": "makerAmountIn", "type": "uint256", "internalType": "uint256" },
+          { "name": "takerDeposit", "type": "uint256", "internalType": "uint256" },
+          { "name": "deltaBps", "type": "int32", "internalType": "int32" },
+          { "name": "startTime", "type": "uint64", "internalType": "uint64" },
+          { "name": "endTime", "type": "uint64", "internalType": "uint64" },
+          { "name": "status", "type": "uint8", "internalType": "enum VWAPRFQSpot.Status" }
+        ]
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "event",
+    "name": "Filled",
+    "inputs": [
+      { "name": "maker", "type": "address", "indexed": true, "internalType": "address" },
+      { "name": "taker", "type": "address", "indexed": true, "internalType": "address" },
+      { "name": "orderHash", "type": "bytes32", "indexed": true, "internalType": "bytes32" },
+      { "name": "startTime", "type": "uint64", "indexed": false, "internalType": "uint64" },
+      { "name": "endTime", "type": "uint64", "indexed": false, "internalType": "uint64" },
+      { "name": "makerAmountIn", "type": "uint256", "indexed": false, "internalType": "uint256" },
+      { "name": "takerDeposit", "type": "uint256", "indexed": false, "internalType": "uint256" },
+      { "name": "makerIsSellETH", "type": "bool", "indexed": false, "internalType": "bool" },
+      { "name": "deltaBps", "type": "int32", "indexed": false, "internalType": "int32" }
+    ]
+  },
+  {
+    "type": "event",
+    "name": "Cancelled",
+    "inputs": [
+      { "name": "maker", "type": "address", "indexed": true, "internalType": "address" },
+      { "name": "orderHash", "type": "bytes32", "indexed": true, "internalType": "bytes32" }
+    ]
+  },
+  {
+    "type": "event",
+    "name": "Settled",
+    "inputs": [
+      { "name": "tradeId", "type": "bytes32", "indexed": true, "internalType": "bytes32" },
+      { "name": "usdcPerEth", "type": "uint256", "indexed": false, "internalType": "uint256" },
+      { "name": "adjustedPrice", "type": "uint256", "indexed": false, "internalType": "uint256" },
+      { "name": "makerPayout", "type": "uint256", "indexed": false, "internalType": "uint256" },
+      { "name": "takerPayout", "type": "uint256", "indexed": false, "internalType": "uint256" },
+      { "name": "makerRefund", "type": "uint256", "indexed": false, "internalType": "uint256" },
+      { "name": "takerRefund", "type": "uint256", "indexed": false, "internalType": "uint256" }
+    ]
+  },
+  {
+    "type": "event",
+    "name": "Refunded",
+    "inputs": [
+      { "name": "tradeId", "type": "bytes32", "indexed": true, "internalType": "bytes32" },
+      { "name": "makerRefund", "type": "uint256", "indexed": false, "internalType": "uint256" },
+      { "name": "takerRefund", "type": "uint256", "indexed": false, "internalType": "uint256" }
+    ]
+  }
+]

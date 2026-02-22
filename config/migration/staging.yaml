@@ -1,0 +1,3 @@
+app_config:
+  postgresql:
+    database: vwap_staging

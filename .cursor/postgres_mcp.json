@@ -1,0 +1,16 @@
+{
+    "mcpServers": {
+      "postgres": {
+        "command": "./toolbox",
+        "args": ["--prebuilt", "postgres", "--stdio"],
+        "env": {
+          "POSTGRES_HOST": "localhost",
+          "POSTGRES_PORT": "5432",
+          "POSTGRES_DATABASE": "vwap_local",
+          "POSTGRES_USER": "postgres",
+          "POSTGRES_PASSWORD": "postgres"
+        }
+      }
+    }
+  }
+  
