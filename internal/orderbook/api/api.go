@@ -17,11 +17,12 @@ import (
 const defaultLimit = 20
 const maxLimit = 100
 
-// AddRoutes registers orderbook routes: POST/GET /orders, GET /orders/:hash.
+// AddRoutes registers orderbook routes: POST/GET /orders, GET /orders/:hash, PATCH /orders/:hash/cancel.
 func AddRoutes(r chi.Router, svc *orderbook.Service) {
 	r.Post("/orders", httpwrap.Handler(createOrder(svc)))
 	r.Get("/orders", httpwrap.Handler(listOrders(svc)))
 	r.Get("/orders/{hash}", httpwrap.Handler(getOrderByHash(svc)))
+	r.Patch("/orders/{hash}/cancel", httpwrap.Handler(cancelOrder(svc)))
 }
 
 // CreateOrderRequest is the JSON body for POST /orders.
@@ -149,6 +150,41 @@ func getOrderByHash(svc *orderbook.Service) httpwrap.HandlerFunc {
 				return nil, &httpwrap.ErrorResponse{StatusCode: http.StatusNotFound, ErrorMsg: "not found", Err: err}
 			}
 			return nil, &httpwrap.ErrorResponse{StatusCode: http.StatusInternalServerError, ErrorMsg: "internal error", Err: err}
+		}
+		return &httpwrap.Response{StatusCode: http.StatusOK, Body: orderToResponse(order)}, nil
+	}
+}
+
+// CancelOrderRequest is the JSON body for PATCH /orders/:hash/cancel.
+type CancelOrderRequest struct {
+	Maker string `json:"maker"`
+}
+
+func cancelOrder(svc *orderbook.Service) httpwrap.HandlerFunc {
+	return func(r *http.Request) (*httpwrap.Response, *httpwrap.ErrorResponse) {
+		hash := chi.URLParam(r, "hash")
+		if hash == "" {
+			return nil, httpwrap.NewInvalidParamErrorResponse("hash")
+		}
+		var req CancelOrderRequest
+		if err := decodeBody(r, &req); err != nil {
+			return nil, &httpwrap.ErrorResponse{StatusCode: http.StatusBadRequest, ErrorMsg: "invalid body", Err: err}
+		}
+		if req.Maker == "" {
+			return nil, &httpwrap.ErrorResponse{StatusCode: http.StatusBadRequest, ErrorMsg: "maker is required", Err: nil}
+		}
+		order, err := svc.CancelOrder(r.Context(), hash, req.Maker)
+		if err != nil {
+			switch {
+			case errors.Is(err, orderbook.ErrNotFound):
+				return nil, &httpwrap.ErrorResponse{StatusCode: http.StatusNotFound, ErrorMsg: "not found", Err: err}
+			case errors.Is(err, orderbook.ErrUnauthorized):
+				return nil, &httpwrap.ErrorResponse{StatusCode: http.StatusForbidden, ErrorMsg: err.Error(), Err: err}
+			case errors.Is(err, orderbook.ErrInvalidStateTransition):
+				return nil, &httpwrap.ErrorResponse{StatusCode: http.StatusBadRequest, ErrorMsg: err.Error(), Err: err}
+			default:
+				return nil, &httpwrap.ErrorResponse{StatusCode: http.StatusInternalServerError, ErrorMsg: "internal error", Err: err}
+			}
 		}
 		return &httpwrap.Response{StatusCode: http.StatusOK, Body: orderToResponse(order)}, nil
 	}

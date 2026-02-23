@@ -5,11 +5,11 @@ package trade
 type DisplayStatus string
 
 const (
-	DisplayStatusLocking    DisplayStatus = "locking"
-	DisplayStatusReady      DisplayStatus = "ready"
-	DisplayStatusRefundable DisplayStatus = "refundable"
-	DisplayStatusSettled    DisplayStatus = "settled"
-	DisplayStatusRefunded   DisplayStatus = "refunded"
+	DisplayStatusLocking         DisplayStatus = "locking"
+	DisplayStatusReadyToSettle   DisplayStatus = "ready_to_settle"
+	DisplayStatusExpiredRefundable DisplayStatus = "expired_refundable"
+	DisplayStatusSettled         DisplayStatus = "settled"
+	DisplayStatusRefunded        DisplayStatus = "refunded"
 )
 
 // DisplayStatusPolicy computes DisplayStatus from a Trade and current time.
@@ -31,9 +31,9 @@ func (p *DisplayStatusPolicy) Compute(t *Trade, nowUnix int64) DisplayStatus {
 		}
 		refundAvailableAt := t.EndTime + p.GraceSeconds
 		if nowUnix < refundAvailableAt {
-			return DisplayStatusReady
+			return DisplayStatusReadyToSettle
 		}
-		return DisplayStatusRefundable
+		return DisplayStatusExpiredRefundable
 	default:
 		return DisplayStatusLocking
 	}

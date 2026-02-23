@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/ethereum/go-ethereum/common"
@@ -88,6 +89,29 @@ func (s *Service) ListOrders(ctx context.Context, filter Filter) ([]*Order, erro
 // OrderByHash returns a single order by hash.
 func (s *Service) OrderByHash(ctx context.Context, orderHash string) (*Order, error) {
 	return s.repo.GetByHash(ctx, orderHash)
+}
+
+// CancelOrder marks an active order as cancelled. Only the maker may cancel.
+// Returns ErrNotFound if order does not exist, ErrInvalidStateTransition if not active.
+func (s *Service) CancelOrder(ctx context.Context, orderHash string, maker string) (*Order, error) {
+	order, err := s.repo.GetByHash(ctx, orderHash)
+	if err != nil {
+		return nil, err
+	}
+	if !stringsEqualIgnoreCase(order.Maker, maker) {
+		return nil, ErrUnauthorized
+	}
+	if err := order.MarkCancelled(); err != nil {
+		return nil, err
+	}
+	if err := s.repo.UpdateStatus(ctx, order); err != nil {
+		return nil, fmt.Errorf("update order status: %w", err)
+	}
+	return order, nil
+}
+
+func stringsEqualIgnoreCase(a, b string) bool {
+	return strings.EqualFold(strings.TrimPrefix(a, "0x"), strings.TrimPrefix(b, "0x"))
 }
 
 // ExpireActiveOrders finds active orders with deadline < now, calls Order.Expire and persists.
