@@ -64,9 +64,6 @@ sqlc-lint:
 
 # Contracts (require go-ethereum abigen: go install github.com/ethereum/go-ethereum/cmd/abigen@latest)
 
-abigen:
-	@abigen --abi contracts/stateview/StateView.json --pkg contracts --type StateView --out internal/liquidity/repository/contracts/stateview.go
-
 # VWAP RFQ Spot: generate Go binding from contract/abi/VWAPRFQSpot.json
 abigen-vwap:
 	@mkdir -p internal/contracts/vwaprfqspot && abigen --abi contract/abi/VWAPRFQSpot.json --pkg vwaprfqspot --type VWAPRFQSpot --out internal/contracts/vwaprfqspot/binding.go

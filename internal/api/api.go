@@ -18,22 +18,17 @@ import (
 
 	apiconfig "vwap/internal/config/api"
 	"vwap/internal/db"
-	liquidityrepo "vwap/internal/liquidity/repository"
-	liquiditysvc "vwap/internal/liquidity/service"
+	"vwap/internal/indexer"
 	"vwap/internal/orderbook"
 	"vwap/internal/trade"
 	"vwap/internal/user/repository"
 	"vwap/internal/user/service"
-	"vwap/internal/indexer"
-	"vwap/internal/vault"
-	vaultapi "vwap/internal/vault/api"
 )
 
 type Server struct {
 	config        *apiconfig.Config
 	httpServer    *http.Server
 	pool          *pgxpool.Pool
-	liquidityRepo *liquidityrepo.Repository
 	ethClient     *ethclient.Client
 	orderbookSvc  *orderbook.Service
 	indexerCancel context.CancelFunc
@@ -49,28 +44,6 @@ func NewServer(ctx context.Context, cfg *apiconfig.Config) (*Server, error) {
 
 	userSvc := service.New(repository.New(queries))
 
-	var liquidityRepo *liquidityrepo.Repository
-
-	if cfg.Ethereum.UseMock {
-		slog.InfoContext(ctx, "using mock liquidity repository") //nolint:sloglint // startup config logging, no logger instance available at this scope
-
-		liquidityRepo = liquidityrepo.NewMock()
-	} else {
-		var err error
-
-		liquidityRepo, err = liquidityrepo.New(liquidityrepo.Config{
-			RPCURL:          cfg.Ethereum.RPCURL,
-			ContractAddress: cfg.Ethereum.StateViewContractAddr,
-		})
-		if err != nil {
-			pool.Close()
-
-			return nil, fmt.Errorf("create liquidity repository: %w", err)
-		}
-	}
-
-	liquiditySvc := liquiditysvc.New(liquidityRepo)
-
 	orderbookRepo := orderbook.NewPostgresRepository(queries)
 	var orderbookSvc *orderbook.Service
 	if cfg.Ethereum.VWAPRFQContractAddr != "" && cfg.Ethereum.ChainID != 0 {
@@ -82,42 +55,28 @@ func NewServer(ctx context.Context, cfg *apiconfig.Config) (*Server, error) {
 	const tradeDisplayGraceSeconds = 7 * 24 * 3600 // 7 days
 	tradeSvc := trade.NewService(tradeRepo, tradeDisplayGraceSeconds)
 
-	var (
-		vaultFactory vaultapi.VaultFactory
-		ethClient    *ethclient.Client
-	)
+	var ethClient *ethclient.Client
 
-	if !cfg.Ethereum.UseMock && cfg.Ethereum.RPCURL != "" {
+	if cfg.Ethereum.RPCURL != "" {
 		ethClient, err = ethclient.Dial(cfg.Ethereum.RPCURL)
 		if err != nil {
 			pool.Close()
 
-			if liquidityRepo != nil {
-				liquidityRepo.Close()
-			}
-
 			return nil, fmt.Errorf("dial ethereum: %w", err)
-		}
-
-		vaultFactory = func(addr common.Address) (vault.Vault, error) {
-			return vault.NewClient(addr, ethClient, nil)
 		}
 	}
 
 	r := chi.NewRouter()
 	AddRoutes(r, cfg, RouteDeps{
 		UserSvc:      userSvc,
-		LiquiditySvc: liquiditySvc,
 		OrderbookSvc: orderbookSvc,
 		TradeSvc:     tradeSvc,
-		VaultFactory: vaultFactory,
 	})
 
 	return &Server{
 		config:        cfg,
 		httpServer:    &http.Server{Addr: cfg.HTTP.Addr, ReadTimeout: cfg.HTTP.ReadTimeout, WriteTimeout: cfg.HTTP.WriteTimeout, Handler: r},
 		pool:          pool,
-		liquidityRepo: liquidityRepo,
 		ethClient:     ethClient,
 		orderbookSvc:  orderbookSvc,
 	}, nil
@@ -157,10 +116,6 @@ func (s *Server) Start() func(context.Context) error {
 		}
 		if s.ethClient != nil {
 			s.ethClient.Close()
-		}
-
-		if s.liquidityRepo != nil {
-			s.liquidityRepo.Close()
 		}
 
 		if s.pool != nil {

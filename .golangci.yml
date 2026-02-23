@@ -495,9 +495,6 @@ linters:
       - path: internal/allocation/tickmath.go
         text: "Function 'GetSqrtRatioAtTick' has too many statements"
         linters: [funlen]
-      - path: internal/vault/api/api.go
-        text: "Function 'getPositions' is too long"
-        linters: [funlen]
       - path: internal/agent/deviation.go
         text: "calculateDeviation"
         linters: [gocyclo]

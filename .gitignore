@@ -34,8 +34,6 @@ go.work
 .env.local
 
 # Generated files
-internal/liquidity/repository/contracts/*.go
-!internal/liquidity/repository/contracts/.gitkeep
 
 # Local tools (large binary)
 toolbox

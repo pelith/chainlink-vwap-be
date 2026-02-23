@@ -13,31 +13,24 @@ import (
 
 	"vwap/internal/api/middleware"
 	apiconfig "vwap/internal/config/api"
-	"vwap/internal/liquidity"
-	liquidityapi "vwap/internal/liquidity/api"
 	"vwap/internal/orderbook"
 	orderbookapi "vwap/internal/orderbook/api"
 	"vwap/internal/trade"
 	tradeapi "vwap/internal/trade/api"
 	"vwap/internal/user"
 	userapi "vwap/internal/user/api"
-	vaultapi "vwap/internal/vault/api"
 )
 
 // RouteDeps holds services required for routing.
 type RouteDeps struct {
-	UserSvc       user.Service
-	LiquiditySvc  liquidity.Service
-	OrderbookSvc  *orderbook.Service
-	TradeSvc      *trade.Service
-	VaultFactory  vaultapi.VaultFactory
+	UserSvc      user.Service
+	OrderbookSvc *orderbook.Service
+	TradeSvc     *trade.Service
 }
 
 // AddRoutes registers API routes on the provided router (central routing).
 func AddRoutes(r chi.Router, cfg *apiconfig.Config, deps RouteDeps) {
 	userSvc := deps.UserSvc
-	liquiditySvc := deps.LiquiditySvc
-	vaultFactory := deps.VaultFactory
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
 		Level: parseLogLevel(cfg.Log.Level),
 	}))
@@ -61,8 +54,6 @@ func AddRoutes(r chi.Router, cfg *apiconfig.Config, deps RouteDeps) {
 
 	r.Route("/v1", func(r chi.Router) {
 		userapi.AddRoutes(r, userSvc)
-		liquidityapi.AddRoutes(r, liquiditySvc)
-		vaultapi.AddRoutes(r, vaultFactory, liquiditySvc)
 		if deps.OrderbookSvc != nil {
 			orderbookapi.AddRoutes(r, deps.OrderbookSvc)
 		}
