@@ -16,9 +16,9 @@ app_config:
       max_age: 600
       allow_credentials: false
   postgresql:
-    database: vwap
+    database: vwap_local
     host: 127.0.0.1
-    port: "5432"
+    port: "5434"
     user: postgres
     password: postgres
   redis:
@@ -27,10 +27,11 @@ app_config:
     password: ""
     db: 0
   ethereum:
-    rpc_url: "https://pelith-devv.ngrok.pizza"
-    stateview_contract_addr: "0x7ffe42c4a5deea5b0fec41c94c136cf115597227"
+    rpc_urls:
+      - "https://ethereum-sepolia-rpc.publicnode.com"
+      - "https://sepolia.drpc.org"
+      - "https://rpc.sepolia.org"
     # For orderbook EIP-712 and optional indexer (same contract as fill/cancel/settle/refund)
-    chain_id: 1
-    vwap_rfq_contract_addr: ""
+    chain_id: 11155111
+    vwap_rfq_contract_addr: "0x61A73573A14898E7031504555c841ea11E7FB07F" # Sepolia VWAPRFQSpot
     use_mock: false
-#https://eth-mainnet.g.alchemy.com/v2/KzHc8dyos4R4H6jMMqXQ8LnEfnYFTen3

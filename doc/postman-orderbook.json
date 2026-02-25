@@ -1,0 +1,130 @@
+{
+  "info": {
+    "name": "VWAP Orderbook API",
+    "description": "訂單簿 API 測試集合，Base URL: http://127.0.0.1:8080",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://127.0.0.1:8080"
+    },
+    {
+      "key": "orderHash",
+      "value": "REPLACE_WITH_ORDER_HASH"
+    },
+    {
+      "key": "makerAddress",
+      "value": "0x1234567890123456789012345678901234567890"
+    }
+  ],
+  "item": [
+    {
+      "name": "訂單列表 - 市集 (active)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/v1/orders?status=active",
+          "host": ["{{baseUrl}}"],
+          "path": ["v1", "orders"],
+          "query": [
+            {"key": "status", "value": "active"}
+          ]
+        }
+      }
+    },
+    {
+      "name": "訂單列表 - My Quotes",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/v1/orders?maker={{makerAddress}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["v1", "orders"],
+          "query": [
+            {"key": "maker", "value": "{{makerAddress}}"}
+          ]
+        }
+      }
+    },
+    {
+      "name": "訂單列表 - 分頁",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/v1/orders?status=active&limit=10&offset=0",
+          "host": ["{{baseUrl}}"],
+          "path": ["v1", "orders"],
+          "query": [
+            {"key": "status", "value": "active"},
+            {"key": "limit", "value": "10"},
+            {"key": "offset", "value": "0"}
+          ]
+        }
+      }
+    },
+    {
+      "name": "訂單列表 - 全部 (無篩選)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/v1/orders",
+          "host": ["{{baseUrl}}"],
+          "path": ["v1", "orders"]
+        }
+      }
+    },
+    {
+      "name": "單筆訂單",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/v1/orders/{{orderHash}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["v1", "orders", "{{orderHash}}"]
+        }
+      }
+    },
+    {
+      "name": "建立訂單",
+      "request": {
+        "method": "POST",
+        "header": [
+          {"key": "Content-Type", "value": "application/json"}
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"maker\": \"0x1234567890123456789012345678901234567890\",\n  \"maker_is_sell_eth\": true,\n  \"amount_in\": \"1000000000000000000\",\n  \"min_amount_out\": \"2000000000\",\n  \"delta_bps\": 0,\n  \"salt\": \"12345678901234567890123456789012\",\n  \"deadline\": 1730000000,\n  \"signature\": \"0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/v1/orders",
+          "host": ["{{baseUrl}}"],
+          "path": ["v1", "orders"]
+        }
+      }
+    },
+    {
+      "name": "取消訂單",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {"key": "Content-Type", "value": "application/json"}
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"maker\": \"{{makerAddress}}\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/v1/orders/{{orderHash}}/cancel",
+          "host": ["{{baseUrl}}"],
+          "path": ["v1", "orders", "{{orderHash}}", "cancel"]
+        }
+      }
+    }
+  ]
+}

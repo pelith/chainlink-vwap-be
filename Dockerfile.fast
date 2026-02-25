@@ -1,0 +1,14 @@
+FROM alpine:3.19
+
+RUN apk add --no-cache ca-certificates tzdata && \
+    adduser -D -H -u 65532 -s /sbin/nologin go-user
+
+WORKDIR /
+
+COPY main /main
+COPY migration /migration
+COPY config/ /config/
+
+USER go-user:go-user
+
+ENTRYPOINT ["./main"]

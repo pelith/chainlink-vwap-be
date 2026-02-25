@@ -1,7 +1,22 @@
 *.json
 *.exe
 *.db
+*.test
+coverage.out
 
-**/.git
+.git
+.gitignore
+.dockerignore
+.cursor
+.env
+.env.*
+*.md
+Dockerfile
+docker-compose*.yaml
+Makefile
+
 **/.DS_Store
 **/node_modules
+
+api
+toolbox

@@ -8,6 +8,7 @@ import (
 	"math/big"
 	"sort"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/ethereum/go-ethereum"
@@ -21,6 +22,9 @@ import (
 	"vwap/internal/orderbook"
 	"vwap/internal/trade"
 )
+
+// maxBlockRange is the maximum blocks per FilterLogs call (many RPCs limit to 50000).
+const maxBlockRange = 50_000
 
 // Config holds indexer configuration.
 type Config struct {
@@ -60,7 +64,7 @@ func New(cfg Config, client *ethclient.Client, q *db.Queries, orderRepo orderboo
 func (s *Indexer) Run(ctx context.Context) error {
 	for {
 		if err := s.runOnce(ctx); err != nil {
-			slog.ErrorContext(ctx, "indexer run failed", slog.Any("error", err))
+			slog.ErrorContext(ctx, "indexer run failed", slog.Any("error", sanitizeRPCError(err)))
 		}
 		select {
 		case <-ctx.Done():
@@ -79,13 +83,7 @@ func (s *Indexer) runOnce(ctx context.Context) error {
 		return nil
 	}
 
-	query := ethereum.FilterQuery{
-		Addresses: []common.Address{s.cfg.ContractAddress},
-		Topics:    [][]common.Hash{AllVWAPRFQTopics()},
-		FromBlock: big.NewInt(int64(fromBlock)),
-		ToBlock:   big.NewInt(int64(toBlock)),
-	}
-	logs, err := s.client.FilterLogs(ctx, query)
+	logs, err := s.fetchLogsInChunks(ctx, fromBlock, toBlock)
 	if err != nil {
 		return fmt.Errorf("filter logs: %w", err)
 	}
@@ -133,8 +131,48 @@ func (s *Indexer) runOnce(ctx context.Context) error {
 	return s.saveCheckpoint(ctx, lastBlock, lastTxIndex)
 }
 
+func (s *Indexer) fetchLogsInChunks(ctx context.Context, fromBlock, toBlock uint64) ([]types.Log, error) {
+	var all []types.Log
+	for from := fromBlock; from <= toBlock; {
+		to := from + maxBlockRange - 1
+		if to > toBlock {
+			to = toBlock
+		}
+		query := ethereum.FilterQuery{
+			Addresses: []common.Address{s.cfg.ContractAddress},
+			Topics:    [][]common.Hash{AllVWAPRFQTopics()},
+			FromBlock: big.NewInt(int64(from)),
+			ToBlock:   big.NewInt(int64(to)),
+		}
+		chunk, err := s.client.FilterLogs(ctx, query)
+		if err != nil {
+			return nil, err
+		}
+		all = append(all, chunk...)
+		from = to + 1
+	}
+	return all, nil
+}
+
 func eventID(txHash common.Hash, logIndex uint) string {
 	return txHash.Hex() + ":" + strconv.FormatUint(uint64(logIndex), 10)
+}
+
+// sanitizeRPCError shortens errors that contain HTML (e.g. Cloudflare 522 pages).
+func sanitizeRPCError(err error) error {
+	if err == nil {
+		return nil
+	}
+	s := err.Error()
+	if strings.Contains(s, "<!DOCTYPE") || strings.Contains(s, "<html") {
+		// Extract HTTP status if present (e.g. "522 :")
+		prefix := ""
+		if i := strings.Index(s, ": "); i > 0 && i < 10 {
+			prefix = strings.TrimSpace(s[:i]) + ": "
+		}
+		return fmt.Errorf("%srpc returned HTML (connection/timeout error)", prefix) //nolint:perfsprint // need prefix
+	}
+	return err
 }
 
 func (s *Indexer) nextRange(ctx context.Context) (fromBlock, toBlock uint64, err error) {

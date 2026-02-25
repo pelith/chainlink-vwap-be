@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"log/slog"
 	"strings"
 	"time"
 
@@ -13,7 +14,7 @@ import (
 
 // Service provides orderbook use cases (create, query, expire).
 type Service struct {
-	repo    Repository
+	repo     Repository
 	verifier *Verifier
 }
 
@@ -61,9 +62,12 @@ func (s *Service) CreateOrder(ctx context.Context, in CreateOrderInput) (*Order,
 
 	recovered, err := s.verifier.RecoverOrderSigner(order, in.Signature)
 	if err != nil {
+		slog.Info("orderbook: signature recovery failed (SigToPub)", "digest", digest.Hex(), "maker", in.Maker, "err", err)
 		return nil, ErrInvalidSignature
 	}
-	if common.HexToAddress(in.Maker) != recovered {
+	expectedMaker := common.HexToAddress(in.Maker)
+	if expectedMaker != recovered {
+		slog.Info("orderbook: signer mismatch", "expected_maker", expectedMaker.Hex(), "recovered_signer", recovered.Hex(), "digest", digest.Hex())
 		return nil, ErrInvalidSignature
 	}
 

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"log/slog"
 	"os"
 	"os/signal"
@@ -11,6 +12,9 @@ import (
 )
 
 func main() {
+	once := flag.Bool("once", false, "run migrate+seed then exit (for docker init)")
+	flag.Parse()
+
 	env := os.Getenv("ENV")
 	if env == "" {
 		env = "local"
@@ -47,7 +51,11 @@ func main() {
 		os.Exit(1)
 	}
 
-	logger.Info("started")
+	logger.Info("migration done")
+
+	if *once {
+		os.Exit(0)
+	}
 
 	interrupt := make(chan os.Signal, 1)
 	signal.Notify(interrupt, os.Interrupt, syscall.SIGHUP, syscall.SIGQUIT, syscall.SIGTERM)

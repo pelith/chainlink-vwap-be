@@ -1,4 +1,4 @@
-.PHONY: build docker release lint gci-format test coverage gen-migration-sql sqlc abigen
+.PHONY: build docker docker-up release lint gci-format test coverage gen-migration-sql sqlc abigen
 NAME=vwap
 
 build:
@@ -8,9 +8,19 @@ app?=api
 tag?=latest
 
 docker:
-	docker build \
-	--build-arg APP=$(app) \
-	-t $(NAME):$(tag) . 
+	docker build --platform linux/amd64 -t $(NAME):$(tag) .
+
+docker-fast:
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags "-s -w" -o main ./cmd/api
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags "-s -w" -o migration ./cmd/migration
+	docker build -f Dockerfile.fast --platform linux/amd64 -t $(NAME):$(tag) .
+	@rm -f main migration
+
+docker-up:
+	docker compose up
+
+docker-up-fast: docker-fast
+	docker compose up
 
 TAG := v$(shell date -u '+%Y.%m.%d.%H.%M.%S')
 

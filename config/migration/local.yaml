@@ -1,3 +1,4 @@
 app_config:
   postgresql:
     database: vwap_local
+    port: "5434"

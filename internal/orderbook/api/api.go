@@ -30,7 +30,7 @@ type CreateOrderRequest struct {
 	Maker          string `json:"maker"`
 	MakerIsSellETH bool   `json:"maker_is_sell_eth"`
 	AmountIn       string `json:"amount_in"`
-	MinAmountOut  string `json:"min_amount_out"`
+	MinAmountOut   string `json:"min_amount_out"`
 	DeltaBps       int32  `json:"delta_bps"`
 	Salt           string `json:"salt"`
 	Deadline       int64  `json:"deadline"`

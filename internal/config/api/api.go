@@ -43,8 +43,9 @@ type Redis struct {
 }
 
 type Ethereum struct {
-	RPCURL                  string `mapstructure:"rpc_url" structs:"rpc_url"`
-	StateViewContractAddr   string `mapstructure:"stateview_contract_addr" structs:"stateview_contract_addr"`
+	RPCURL                string   `mapstructure:"rpc_url" structs:"rpc_url"`
+	RPCURLs               []string `mapstructure:"rpc_urls" structs:"rpc_urls"` // fallback list; tried in order if non-empty
+	StateViewContractAddr string   `mapstructure:"stateview_contract_addr" structs:"stateview_contract_addr"`
 	VWAPRFQContractAddr     string `mapstructure:"vwap_rfq_contract_addr" structs:"vwap_rfq_contract_addr"`
 	ChainID                 int64  `mapstructure:"chain_id" structs:"chain_id"`
 	UseMock                 bool   `mapstructure:"use_mock" structs:"use_mock"`

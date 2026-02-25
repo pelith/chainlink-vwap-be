@@ -57,8 +57,8 @@ func NewServer(ctx context.Context, cfg *apiconfig.Config) (*Server, error) {
 
 	var ethClient *ethclient.Client
 
-	if cfg.Ethereum.RPCURL != "" {
-		ethClient, err = ethclient.Dial(cfg.Ethereum.RPCURL)
+	if urls := ethRPCURLs(cfg.Ethereum); len(urls) > 0 {
+		ethClient, err = dialEthWithFallback(ctx, urls)
 		if err != nil {
 			pool.Close()
 
@@ -74,11 +74,11 @@ func NewServer(ctx context.Context, cfg *apiconfig.Config) (*Server, error) {
 	})
 
 	return &Server{
-		config:        cfg,
-		httpServer:    &http.Server{Addr: cfg.HTTP.Addr, ReadTimeout: cfg.HTTP.ReadTimeout, WriteTimeout: cfg.HTTP.WriteTimeout, Handler: r},
-		pool:          pool,
-		ethClient:     ethClient,
-		orderbookSvc:  orderbookSvc,
+		config:       cfg,
+		httpServer:   &http.Server{Addr: cfg.HTTP.Addr, ReadTimeout: cfg.HTTP.ReadTimeout, WriteTimeout: cfg.HTTP.WriteTimeout, Handler: r},
+		pool:         pool,
+		ethClient:    ethClient,
+		orderbookSvc: orderbookSvc,
 	}, nil
 }
 
@@ -147,6 +147,49 @@ func newPgxPool(ctx context.Context, pg apiconfig.PostgreSQL) (*pgxpool.Pool, er
 	}
 
 	return pool, nil
+}
+
+// ethRPCURLs returns RPC URLs to try in order (rpc_urls if set, else rpc_url).
+func ethRPCURLs(eth apiconfig.Ethereum) []string {
+	if len(eth.RPCURLs) > 0 {
+		return eth.RPCURLs
+	}
+	if eth.RPCURL != "" {
+		return []string{eth.RPCURL}
+	}
+	return nil
+}
+
+// dialEthWithFallback tries each URL until one succeeds.
+func dialEthWithFallback(ctx context.Context, urls []string) (*ethclient.Client, error) {
+	var lastErr error
+	for _, u := range urls {
+		if u == "" {
+			continue
+		}
+		client, err := ethclient.DialContext(ctx, u)
+		if err != nil {
+			lastErr = err
+			slog.Warn("eth rpc dial failed, trying next", slog.String("url", u), slog.Any("error", err))
+			continue
+		}
+		// Verify connection with a simple call
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		_, err = client.BlockNumber(ctx)
+		cancel()
+		if err != nil {
+			client.Close()
+			lastErr = err
+			slog.Warn("eth rpc health check failed, trying next", slog.String("url", u), slog.Any("error", err))
+			continue
+		}
+		slog.Info("eth rpc connected", slog.String("url", u))
+		return client, nil
+	}
+	if lastErr == nil {
+		return nil, errors.New("no rpc url to dial")
+	}
+	return nil, lastErr
 }
 
 // runIndexer runs the blockchain indexer until ctx is cancelled.

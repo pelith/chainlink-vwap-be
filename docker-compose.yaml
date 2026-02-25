@@ -1,33 +1,65 @@
+# 只跑 postgres + redis，後端用 go run 或 binary 本機起
+# GCP 部署：只需此檔 + vwap image，migration 會自動在 api 前執行
 services:
   postgres:
     image: postgres:16
-    network_mode: host
     restart: always
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 2s
+      timeout: 5s
+      retries: 5
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: vwap_local
+    ports:
+      - "5432:5432"
 
   redis:
     image: redis:7
-    network_mode: host
     restart: always
+    ports:
+      - "6379:6379"
+
+  migration:
+    image: vwap:latest
+    restart: "no"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    entrypoint: ["./migration"]
+    command: ["-once"]
+    environment:
+      ENV: local
+      APP_CONFIG_POSTGRESQL_HOST: postgres
+      APP_CONFIG_POSTGRESQL_PORT: "5432"
+      APP_CONFIG_POSTGRESQL_USER: postgres
+      APP_CONFIG_POSTGRESQL_PASSWORD: postgres
+      APP_CONFIG_POSTGRESQL_DATABASE: vwap_local
 
   api:
-    image: myapi:amd64
-    network_mode: host
+    image: vwap:latest
     restart: always
+    depends_on:
+      migration:
+        condition: service_completed_successfully
+      redis:
+        condition: service_started
     environment:
       ENV: local
       # HTTP
       APP_CONFIG_HTTP_ADDR: "0.0.0.0:8080"
       APP_CONFIG_HTTP_CORS_ENABLE: "true"
-      # PostgreSQL
-      APP_CONFIG_POSTGRESQL_HOST: "127.0.0.1"
+      # PostgreSQL（用服務名，容器內可互相解析）
+      APP_CONFIG_POSTGRESQL_HOST: "postgres"
       APP_CONFIG_POSTGRESQL_PORT: "5432"
       APP_CONFIG_POSTGRESQL_USER: postgres
       APP_CONFIG_POSTGRESQL_PASSWORD: postgres
       APP_CONFIG_POSTGRESQL_DATABASE: vwap_local
       # Redis
-      APP_CONFIG_REDIS_HOST: "127.0.0.1"
+      APP_CONFIG_REDIS_HOST: "redis"
       APP_CONFIG_REDIS_PORT: "6379"
+    ports:
+      - "8080:8080"
+
