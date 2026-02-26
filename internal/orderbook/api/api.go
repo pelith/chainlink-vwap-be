@@ -47,6 +47,7 @@ type OrderResponse struct {
 	DeltaBps       int32      `json:"delta_bps"`
 	Salt           string     `json:"salt"`
 	Deadline       int64      `json:"deadline"`
+	Signature      string     `json:"signature"` // hex-encoded, for Taker to call contract.fill()
 	Status         string     `json:"status"`
 	CreatedAt      time.Time  `json:"created_at"`
 	FilledAt       *time.Time `json:"filled_at,omitempty"`
@@ -55,6 +56,10 @@ type OrderResponse struct {
 }
 
 func orderToResponse(o *orderbook.Order) *OrderResponse {
+	sigHex := ""
+	if len(o.Signature) > 0 {
+		sigHex = "0x" + hex.EncodeToString(o.Signature)
+	}
 	return &OrderResponse{
 		OrderHash:      o.OrderHash,
 		Maker:          o.Maker,
@@ -64,6 +69,7 @@ func orderToResponse(o *orderbook.Order) *OrderResponse {
 		DeltaBps:       o.DeltaBps,
 		Salt:           o.Salt,
 		Deadline:       o.Deadline,
+		Signature:      sigHex,
 		Status:         string(o.Status),
 		CreatedAt:      o.CreatedAt,
 		FilledAt:       o.FilledAt,
