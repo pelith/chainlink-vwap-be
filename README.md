@@ -400,7 +400,6 @@ vwap/
 │   ├── migrations/       # SQL migration files (YYYYMMDDHHMMSS_name.up/down.sql)
 │   ├── queries/          # sqlc SQL query definitions
 │   └── seeds/            # Seed data (organized by environment)
-├── doc/                  # API docs and frontend integration guides
 └── internal/
     ├── api/              # HTTP server, routing, middleware
     ├── config/           # Config loading and typed structs
