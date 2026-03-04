@@ -442,12 +442,3 @@ vwap/
     ├── trade/            # Trade domain (Service, Repository, display_status)
     └── user/             # User domain
 ```
-
----
-
-## Related Docs
-
-- [`doc/api.md`](doc/api.md) — Full REST API reference with field descriptions
-- [`doc/contract-abi-vwaprfq.md`](doc/contract-abi-vwaprfq.md) — VWAPRFQSpot ABI reference
-- [`doc/fe.md`](doc/fe.md) — Frontend integration guide
-- [`cre/chainlink-vwap-contract-cre/ARCHITECTURE.md`](cre/chainlink-vwap-contract-cre/ARCHITECTURE.md) — Chainlink CRE VWAP computation design
