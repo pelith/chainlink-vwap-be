@@ -222,14 +222,6 @@ curl http://127.0.0.1:8080/health
 
 ---
 
-### Users
-
-| Method | Path | Description |
-|--------|------|-------------|
-| `GET` | `/v1/users/{id}` | Get a user by UUID |
-
----
-
 ### Orders (Orderbook)
 
 | Method | Path | Description |
@@ -313,26 +305,6 @@ curl "http://127.0.0.1:8080/v1/trades?address=0xYourAddress"
 | `expired_refundable` | Grace period passed, eligible for refund | Show "Refund" button |
 | `settled` | Trade has been settled | Show settlement result |
 | `refunded` | Trade has been refunded | Show refund result |
-
----
-
-### Oracle
-
-| Method | Path | Description |
-|--------|------|-------------|
-| `POST` | `/oracle/trigger` | Manually trigger VWAP settlement (rate-limited: 10 min) |
-
-> Requires `APP_CONFIG_SETTLER_URL` to be set.
-
-```bash
-# Trigger settlement for the latest pending trades
-curl -X POST http://127.0.0.1:8080/oracle/trigger
-
-# Specify a custom endTime
-curl -X POST http://127.0.0.1:8080/oracle/trigger \
-  -H "Content-Type: application/json" \
-  -d '{"endTime": 1735689600}'
-```
 
 ---
 
@@ -424,8 +396,6 @@ vwap/
 ├── contract/
 │   ├── VWAPRFQSpot.sol   # Smart contract source
 │   └── abi/              # ABI JSON files
-├── cre/
-│   └── chainlink-vwap-contract-cre/  # Chainlink CRE Workflow (VWAP computation)
 ├── database/
 │   ├── migrations/       # SQL migration files (YYYYMMDDHHMMSS_name.up/down.sql)
 │   ├── queries/          # sqlc SQL query definitions
