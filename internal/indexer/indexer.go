@@ -119,7 +119,14 @@ func (s *Indexer) runOnce(ctx context.Context) error {
 			continue
 		}
 		if err := s.processLog(ctx, l); err != nil {
-			return fmt.Errorf("process log %s: %w", eventID, err)
+			if errors.Is(err, orderbook.ErrInvalidStateTransition) || errors.Is(err, trade.ErrInvalidStateTransition) {
+				slog.WarnContext(ctx, "skipping event: invalid state transition",
+					slog.String("event", eventID),
+					slog.Any("error", err),
+				)
+			} else {
+				return fmt.Errorf("process log %s: %w", eventID, err)
+			}
 		}
 		if err := s.q.InsertProcessedEvent(ctx, eventID); err != nil {
 			return fmt.Errorf("insert processed event: %w", err)
