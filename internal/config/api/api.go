@@ -48,5 +48,6 @@ type Ethereum struct {
 	StateViewContractAddr string   `mapstructure:"stateview_contract_addr" structs:"stateview_contract_addr"`
 	VWAPRFQContractAddr     string `mapstructure:"vwap_rfq_contract_addr" structs:"vwap_rfq_contract_addr"`
 	ChainID                 int64  `mapstructure:"chain_id" structs:"chain_id"`
+	IndexerStartBlock       uint64 `mapstructure:"indexer_start_block" structs:"indexer_start_block"`
 	UseMock                 bool   `mapstructure:"use_mock" structs:"use_mock"`
 }

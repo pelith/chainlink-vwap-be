@@ -183,23 +183,32 @@ func sanitizeRPCError(err error) error {
 }
 
 func (s *Indexer) nextRange(ctx context.Context) (fromBlock, toBlock uint64, err error) {
-	fromBlock = uint64(s.cfg.StartBlock)
+	header, err := s.client.HeaderByNumber(ctx, nil)
+	if err != nil {
+		return 0, 0, fmt.Errorf("latest block: %w", err)
+	}
+	toBlock = header.Number.Uint64()
+
+	// Default: start from the current latest block (only watch future events).
+	// If StartBlock is set (non-zero), use it as a lower bound for historical indexing.
+	fromBlock = toBlock
+	if s.cfg.StartBlock != 0 {
+		fromBlock = uint64(s.cfg.StartBlock)
+	}
+
 	cp, err := s.q.GetCheckpoint(ctx)
 	if err == nil {
 		start := cp.LastProcessedBlock - s.cfg.ReorgBlocks
 		if start < 0 {
 			start = 0
 		}
-		fromBlock = uint64(start)
+		if uint64(start) > fromBlock {
+			fromBlock = uint64(start)
+		}
 	} else if !isNoRows(err) {
 		return 0, 0, fmt.Errorf("get checkpoint: %w", err)
 	}
 
-	header, err := s.client.HeaderByNumber(ctx, nil)
-	if err != nil {
-		return 0, 0, fmt.Errorf("latest block: %w", err)
-	}
-	toBlock = header.Number.Uint64()
 	return fromBlock, toBlock, nil
 }
 

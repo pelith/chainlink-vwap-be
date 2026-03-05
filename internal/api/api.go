@@ -105,7 +105,7 @@ func (s *Server) Start() func(context.Context) error {
 		go runIndexer(idxCtx, indexer.Config{
 			ContractAddress: common.HexToAddress(s.config.Ethereum.VWAPRFQContractAddr),
 			ReorgBlocks:     10,
-			StartBlock:      0,
+			StartBlock:      s.config.Ethereum.IndexerStartBlock,
 			PollInterval:    15 * time.Second,
 		}, s.ethClient, idxQueries, idxOrderRepo, idxTradeRepo)
 	}
@@ -149,13 +149,15 @@ func newPgxPool(ctx context.Context, pg apiconfig.PostgreSQL) (*pgxpool.Pool, er
 	return pool, nil
 }
 
-// ethRPCURLs returns RPC URLs to try in order (rpc_urls if set, else rpc_url).
+// ethRPCURLs returns RPC URLs to try in order.
+// rpc_url (singular) takes priority so it can be overridden via
+// APP_CONFIG_ETHEREUM_RPC_URL env var without touching rpc_urls in YAML.
 func ethRPCURLs(eth apiconfig.Ethereum) []string {
-	if len(eth.RPCURLs) > 0 {
-		return eth.RPCURLs
-	}
 	if eth.RPCURL != "" {
 		return []string{eth.RPCURL}
+	}
+	if len(eth.RPCURLs) > 0 {
+		return eth.RPCURLs
 	}
 	return nil
 }

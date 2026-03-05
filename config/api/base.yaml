@@ -27,6 +27,7 @@ app_config:
     password: ""
     db: 0
   ethereum:
+    rpc_url: ""
     rpc_urls:
       - "https://ethereum-sepolia-rpc.publicnode.com"
       - "https://sepolia.drpc.org"
@@ -34,4 +35,5 @@ app_config:
     # For orderbook EIP-712 and optional indexer (same contract as fill/cancel/settle/refund)
     chain_id: 11155111
     vwap_rfq_contract_addr: "0x61A73573A14898E7031504555c841ea11E7FB07F" # Sepolia VWAPRFQSpot
+    indexer_start_block: 0
     use_mock: false
